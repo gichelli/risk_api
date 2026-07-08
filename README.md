@@ -1,27 +1,215 @@
 README.md
 # Secure Developer-Friendly Release Pipeline Design
 
-# Python virtual environment
-.venv/
+# Local Development Setup
 
-# Python cache
-__pycache__/
-*.py[cod]
+This section explains how to set up the local development environment for the demo application.
 
-# Test cache
-.pytest_cache/
+The project uses:
 
-# Build artifacts
-*.egg-info/
-dist/
-build/
+- Python 3.11+
+- Virtual environment isolation
+- `pyproject.toml` for dependency management
 
-# IDE
-.idea/
-.vscode/
+---
 
-# macOS
-.DS_Store
+## Prerequisites
+
+Install the following tools:
+
+- Python 3.11+
+- Docker
+- Git
+
+Verify Python installation:
+
+```bash
+python3 --version
+```
+
+Expected:
+
+```text
+Python 3.11.x
+```
+
+---
+
+## Create Virtual Environment
+
+Navigate to the demo application:
+
+```bash
+cd app/demo
+```
+
+Create a virtual environment:
+
+```bash
+python3 -m venv .venv
+```
+
+Activate the environment.
+
+### macOS / Linux
+
+```bash
+source .venv/bin/activate
+```
+
+Verify:
+
+```bash
+python --version
+```
+
+Expected:
+
+```text
+Python 3.11.x
+```
+
+---
+
+## Install Dependencies
+
+The project uses `pyproject.toml` to manage application and development dependencies.
+
+Install the project in editable mode with development dependencies:
+
+```bash
+pip install --upgrade pip
+pip install -e ".[dev]"
+```
+
+Installed development tools include:
+
+- Flask application dependencies
+- Gunicorn production server
+- Pytest testing framework
+- Ruff linting tool
+
+---
+
+## Run Tests
+
+Execute the test suite:
+
+```bash
+pytest
+```
+
+Expected result:
+
+```text
+1 passed
+```
+
+---
+
+## Run Code Quality Checks
+
+Run linting:
+
+```bash
+ruff check .
+```
+
+---
+
+## Run Application Locally
+
+Start the application:
+
+```bash
+gunicorn --bind 0.0.0.0:8080 src.app:app
+```
+
+The application will be available at:
+
+```
+http://localhost:8080
+```
+
+---
+
+## Health Check
+
+Verify application health:
+
+```bash
+curl http://localhost:8080/health
+```
+
+Expected response:
+
+```json
+{
+  "status": "healthy"
+}
+```
+
+---
+
+## Docker Build
+
+Build the application container:
+
+```bash
+docker build -t platform-demo .
+```
+
+Run the container:
+
+```bash
+docker run -p 8080:8080 platform-demo
+```
+
+Verify:
+
+```bash
+curl http://localhost:8080/health
+```
+
+---
+
+## Development Workflow
+
+The local workflow mirrors the production pipeline:
+
+```
+Developer Machine
+
+    |
+    v
+
+Virtual Environment
+
+    |
+    v
+
+Run Tests + Linting
+
+    |
+    v
+
+Docker Build
+
+    |
+    v
+
+GitHub Actions CI
+
+    |
+    v
+
+Container Registry
+
+    |
+    v
+
+Kubernetes Deployment
+```
 
 ## 1. Introduction and Problem Statement
 
