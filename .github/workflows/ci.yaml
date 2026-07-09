@@ -45,6 +45,15 @@ jobs:
         make lint
 
 
+    - name: Run dependency security scan
+      run: |
+        pip install pip-audit
+        pip-audit
+
+    - name: Scan repository for secrets
+      uses: gitleaks/gitleaks-action@v2
+
+
     - name: Build Docker image
       run: |
         make docker-build
