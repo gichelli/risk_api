@@ -67,15 +67,14 @@ jobs:
     - name: Login to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v2
 
-
     - name: Build and push Docker image
-  env:
-    ECR_REGISTRY: 037229268993.dkr.ecr.us-east-1.amazonaws.com
-    IMAGE_NAME: risk-api
-  run: |
-    docker build \
-      -t $ECR_REGISTRY/$IMAGE_NAME:${{ github.sha }} \
-      app/risk_api
+      env:
+        ECR_REGISTRY: 037229268993.dkr.ecr.us-east-1.amazonaws.com
+        IMAGE_NAME: risk-api
+      run: |
+        docker build \
+          -t $ECR_REGISTRY/$IMAGE_NAME:${{ github.sha }} \
+          app/risk_api
 
-    docker push \
-      $ECR_REGISTRY/$IMAGE_NAME:${{ github.sha }}
+        docker push \
+          $ECR_REGISTRY/$IMAGE_NAME:${{ github.sha }}
