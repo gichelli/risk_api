@@ -1,19 +1,25 @@
-.PHONY: install test lint format run docker-build
+.PHONY: install test lint format run docker-build docker-run
+
+APP_DIR=app/risk_api
+IMAGE_NAME=risk-api
 
 install:
-	cd app/demo && pip install -e ".[dev]"
+	cd $(APP_DIR) && python -m pip install -e ".[dev]"
 
 test:
-	cd app/demo && pytest
+	cd $(APP_DIR) && python -m pytest
 
 lint:
-	cd app/demo && ruff check .
+	cd $(APP_DIR) && ruff check .
 
 format:
-	cd app/demo && ruff format .
+	cd $(APP_DIR) && ruff format .
 
 run:
-	cd app/demo && gunicorn --bind 0.0.0.0:8080 src.app:app
+	cd $(APP_DIR) && gunicorn --bind 0.0.0.0:8080 src.app:app
 
 docker-build:
-	cd app/demo && docker build -t platform-demo .
+	docker build -t $(IMAGE_NAME):latest $(APP_DIR)
+
+docker-run:
+	docker run --rm -p 8080:8080 $(IMAGE_NAME):latest

@@ -1,15 +1,142 @@
-README.md
 # Secure Developer-Friendly Release Pipeline Design
 
-# Local Development Setup
+## 1. Introduction and Problem Statement
+    - Current pipeline pain points
+    - Goals
+    - Why automation is needed
 
-This section explains how to set up the local development environment for the demo application.
+## 2. Architecture Overview
+    - AWS
+    - EKS
+    - GitHub
+    - GitHub Actions
+    - ECR
+    - Helm
+    - ArgoCD
+    - Terraform
+    - Secrets Manager
 
-The project uses:
+---
+# 2. Architecture Overview
 
-- Python 3.11+
-- Virtual environment isolation
-- `pyproject.toml` for dependency management
+The proposed release pipeline uses a cloud-native architecture designed around automation, security, and developer productivity.
+
+The platform components are:
+
+- Cloud Provider: AWS
+- Container Platform: Amazon EKS Kubernetes
+- Source Control: GitHub
+- Continuous Integration: GitHub Actions
+- Container Registry: Amazon ECR
+- Continuous Delivery: ArgoCD using GitOps principles
+- Infrastructure as Code: Terraform
+- Secrets Management: AWS Secrets Manager with External Secrets Operator
+
+High-level workflow:
+
+Developer
+    |
+    v
+GitHub Pull Request
+    |
+    v
+GitHub Actions CI
+    |
+    +--> Unit Tests
+    |
+    +--> Linting
+    |
+    +--> Security Scanning
+    |
+    +--> Docker Build
+    |
+    v
+Amazon ECR
+    |
+    v
+ArgoCD
+    |
+    v
+Amazon EKS
+    |
+    v
+Environment Deployment
+---
+
+## 3. Demo Application Overview
+    - What the application does
+    - Why this demo model/API exists
+
+---
+# 3. Demo Application Overview
+
+To demonstrate the release pipeline, this repository contains a small Flask-based risk classification API.
+
+The application simulates a machine learning service that receives text input and returns a risk classification.
+
+Example:
+
+Request:
+
+{
+  "text": "armed conflict reported"
+}
+
+Response:
+
+{
+  "risk_level": "HIGH",
+  "confidence": 0.90
+}
+
+The model logic is intentionally simple because the focus of this project is not model accuracy, but demonstrating:
+
+- Application packaging
+- Automated testing
+- Containerization
+- CI/CD workflows
+- Kubernetes deployment
+- Production promotion strategies
+----
+
+
+## 4. Local Developer Setup
+    - Python venv
+    - Dependencies
+    - Make commands
+    - Running tests
+    - Running locally
+
+---
+Copy and paste this directly into your `README.md`:
+
+```markdown
+# 4. Local Developer Setup
+
+This section describes how developers can set up the application locally and validate changes before opening a pull request.
+
+The local workflow is designed to match the CI pipeline as closely as possible:
+
+```
+
+Developer Change
+|
+v
+Install Dependencies
+|
+v
+Run Tests
+|
+v
+Run Linting
+|
+v
+Build Docker Image
+|
+v
+Submit Pull Request
+
+````
 
 ---
 
@@ -20,28 +147,31 @@ Install the following tools:
 - Python 3.11+
 - Docker
 - Git
+- Make
 
-Verify Python installation:
+Verify installations:
 
 ```bash
 python3 --version
-```
+docker --version
+make --version
+````
 
-Expected:
+---
 
-```text
-Python 3.11.x
+## Clone Repository
+
+Clone the repository:
+
+```bash
+git clone <repository-url>
+
+cd platform_architecture_design
 ```
 
 ---
 
-## Create Virtual Environment
-
-Navigate to the demo application:
-
-```bash
-cd app/demo
-```
+## Create Python Virtual Environment
 
 Create a virtual environment:
 
@@ -49,7 +179,7 @@ Create a virtual environment:
 python3 -m venv .venv
 ```
 
-Activate the environment.
+Activate the environment:
 
 ### macOS / Linux
 
@@ -60,50 +190,58 @@ source .venv/bin/activate
 Verify:
 
 ```bash
-python --version
+which python
 ```
 
 Expected:
 
 ```text
-Python 3.11.x
+platform_architecture_design/.venv/bin/python
 ```
 
 ---
 
-## Install Dependencies
+## Install Application Dependencies
 
-The project uses `pyproject.toml` to manage application and development dependencies.
-
-Install the project in editable mode with development dependencies:
+Install the application and development dependencies:
 
 ```bash
-pip install --upgrade pip
-pip install -e ".[dev]"
+make install
+```
+
+Dependencies are managed using:
+
+```
+app/risk_api/pyproject.toml
 ```
 
 Installed development tools include:
 
-- Flask application dependencies
-- Gunicorn production server
-- Pytest testing framework
-- Ruff linting tool
+* Flask application dependencies
+* Gunicorn production server
+* Pytest testing framework
+* Ruff code quality tooling
 
 ---
 
-## Run Tests
+## Run Automated Tests
 
 Execute the test suite:
 
 ```bash
-pytest
+make test
 ```
 
 Expected result:
 
 ```text
-1 passed
+2 passed
 ```
+
+The tests validate:
+
+* Health endpoint behavior
+* Risk prediction API behavior
 
 ---
 
@@ -112,7 +250,19 @@ Expected result:
 Run linting:
 
 ```bash
-ruff check .
+make lint
+```
+
+Ruff validates:
+
+* Import formatting
+* Code quality rules
+* Consistent Python standards
+
+Expected result:
+
+```text
+All checks passed
 ```
 
 ---
@@ -122,10 +272,10 @@ ruff check .
 Start the application:
 
 ```bash
-gunicorn --bind 0.0.0.0:8080 src.app:app
+make run
 ```
 
-The application will be available at:
+The API will be available at:
 
 ```
 http://localhost:8080
@@ -135,7 +285,7 @@ http://localhost:8080
 
 ## Health Check
 
-Verify application health:
+Verify the application is running:
 
 ```bash
 curl http://localhost:8080/health
@@ -151,103 +301,95 @@ Expected response:
 
 ---
 
-## Docker Build
+## Test Prediction API
 
-Build the application container:
+Send a prediction request:
 
 ```bash
-docker build -t platform-demo .
+curl -X POST http://localhost:8080/predict \
+-H "Content-Type: application/json" \
+-d '{"text":"armed conflict reported"}'
 ```
 
-Run the container:
+Expected response:
 
-```bash
-docker run -p 8080:8080 platform-demo
-```
-
-Verify:
-
-```bash
-curl http://localhost:8080/health
+```json
+{
+  "risk_level": "HIGH",
+  "confidence": 0.9
+}
 ```
 
 ---
 
-## Development Workflow
+## Build Docker Image
 
-The local workflow mirrors the production pipeline:
+Build the application container:
 
-```
-Developer Machine
-
-    |
-    v
-
-Virtual Environment
-
-    |
-    v
-
-Run Tests + Linting
-
-    |
-    v
-
-Docker Build
-
-    |
-    v
-
-GitHub Actions CI
-
-    |
-    v
-
-Container Registry
-
-    |
-    v
-
-Kubernetes Deployment
+```bash
+make docker-build
 ```
 
-## 1. Introduction and Problem Statement
+This creates the container artifact:
 
-### Problem Statement
+```
+risk-api:latest
+```
 
-The existing release process creates friction by relying on manual steps, inconsistent deployment workflows, and delayed feedback loops. These challenges increase delivery time, create operational risk, and make it difficult to maintain consistent security and reliability standards across environments.
+The same container artifact will later be promoted through different environments:
 
-A modern platform engineering approach requires a release pipeline that provides automation, standardization, and guard rails while allowing engineering teams to deliver software quickly and safely.
+```
+Development
+      |
+      v
+Staging
+      |
+      v
+Production
+```
 
-### Objective
+using the automated release pipeline.
 
-The objective of this design is to create a secure, developer-friendly release pipeline that enables engineers to move code from development to production efficiently while maintaining reliability, security, and operational visibility.
+```
 
-The proposed solution introduces automated workflows, infrastructure-as-code practices, GitOps-based deployments, and integrated security controls throughout the software delivery lifecycle.
+This section fits after **Architecture Overview** and before **Containerization / CI/CD Pipeline**.
+```
 
-### Key Goals
+---
 
-The release pipeline is designed to:
+## 5. Containerization
+    - Dockerfile
+    - Building image
+    - Running container
 
-- Automate build, test, security validation, and deployment workflows.
-- Provide fast feedback to developers through automated validation.
-- Implement security controls throughout the software delivery lifecycle.
-- Enable consistent promotion across development, staging, and production environments.
-- Reduce deployment risk through automated validation, monitoring, and rollback capabilities.
-- Improve developer experience by reducing manual deployment steps and providing standardized workflows.
-- Create a repeatable and auditable deployment process using modern DevOps and GitOps practices.
+## 6. CI/CD Pipeline
+    - Pull request flow
+    - Testing
+    - Linting
+    - Security scans
+    - Image build
 
-## 2. Design Overview
+## 7. Artifact Management
+    - ECR
+    - Image tagging
+    - Promotion strategy
 
-This document describes the architecture and implementation approach for a production-ready release pipeline using:
+## 8. Kubernetes Deployment
+    - Helm charts
+    - EKS
+    - Configuration
 
-- AWS as the cloud platform.
-- Amazon EKS as the Kubernetes hosting platform.
-- GitHub as the source control platform.
-- GitHub Actions for continuous integration.
-- Amazon ECR for container artifact storage.
-- ArgoCD for GitOps-based continuous delivery.
-- Terraform for infrastructure provisioning.
-- AWS Secrets Manager and External Secrets Operator for secure secret management.
+## 9. GitOps Deployment
+    - ArgoCD
+    - Environment promotion
 
-The design focuses on security, reliability, scalability, and developer productivity.
+## 10. Security Controls
+    - Dependency scanning
+    - Container scanning
+    - Secrets management
+
+## 11. Operational Considerations
+    - Monitoring
+    - Logging
+    - Rollbacks
+    - Disaster recovery

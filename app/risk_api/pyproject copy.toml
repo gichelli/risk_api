@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 
 [project]
-name = "platform-demo"
+name = "platform"
 version = "0.1.0"
 description = "Demo API for Senior Platform Engineer release pipeline"
 requires-python = ">=3.9"
