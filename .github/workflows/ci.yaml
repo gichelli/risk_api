@@ -61,7 +61,6 @@ jobs:
     - name: Docker build validation
       run: |
         docker build \
-        -f app/risk_api/Dockerfile \
         -t risk-api:test .
 
 
