@@ -30,7 +30,7 @@ The platform components are:
 - Container Registry: Amazon ECR
 - Continuous Delivery: ArgoCD using GitOps principles
 - Infrastructure as Code: Terraform
-- Secrets Management: AWS Secrets Manager with External Secrets Operator
+- Secrets Management: AWS Secrets Manager with External Secrets Operator ..
 
 High-level workflow:
 
