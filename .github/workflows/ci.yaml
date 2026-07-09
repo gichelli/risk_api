@@ -1,18 +1,20 @@
-name: CI Pipeline
+name: Developer CI
 
 on:
-  pull_request:
-    branches:
-      - main
 
   push:
     branches:
-      - main
+      - "**"
+
+permissions:
+  contents: read
+  pull-requests: read
+
 
 
 jobs:
 
-  test-and-build:
+  validate:
 
     runs-on: ubuntu-latest
 
@@ -20,6 +22,8 @@ jobs:
 
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
 
     - name: Setup Python
@@ -45,6 +49,13 @@ jobs:
         make lint
 
 
-    - name: Build Docker image
+    - name: Dependency security scan
       run: |
-        make docker-build
+        pip install pip-audit
+        pip-audit
+
+
+    - name: Secret scanning
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

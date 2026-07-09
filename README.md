@@ -161,7 +161,7 @@ make --version
 
 ## Clone Repository
 
-Clone the repository:
+Clone the repository ->
 
 ```bash
 git clone <repository-url>
@@ -392,4 +392,5 @@ This section fits after **Architecture Overview** and before **Containerization 
     - Monitoring
     - Logging
     - Rollbacks
-    - Disaster recovery
+    - Disaster recovery# branch protection test
+# branch protection testing

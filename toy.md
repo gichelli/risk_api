@@ -563,3 +563,1241 @@ The core principle:
 **Code moves through Git. Artifacts move through environments.**
 
 You do not rebuild for staging or production. You promote the exact Docker image that already passed testing. That is what makes the release process reliable and auditable.
+-----
+
+This challenge is **not asking you to build a full production system**. It is asking you to **design and explain** a release pipeline. Your toy application is just the vehicle to prove the pipeline works.
+
+The important thing is that your demo maps to every requirement in the challenge.
+
+Here is how your project should line up with the challenge:
+
+---
+
+# Challenge Requirement → Your Demo Implementation
+
+## 1. Different stages of the pipeline
+
+You need to show the complete lifecycle:
+
+```text
+Developer
+    |
+    v
+Feature Branch
+    |
+    v
+Pull Request
+    |
+    v
+CI Pipeline
+    |
+    +--> Unit Tests
+    |
+    +--> Lint
+    |
+    +--> Security Scan
+    |
+    +--> Docker Build
+    |
+    v
+Merge to Main
+    |
+    v
+Build Release Artifact
+    |
+    v
+Push Image to ECR
+    |
+    v
+Deploy with ArgoCD
+    |
+    v
+Amazon EKS
+```
+
+Your toy Flask risk API demonstrates the artifact moving through this flow.
+
+---
+
+# 2. Technologies supporting each stage
+
+Your assumptions:
+
+| Area                | Technology                                      |
+| ------------------- | ----------------------------------------------- |
+| Source Control      | GitHub                                          |
+| CI                  | GitHub Actions                                  |
+| Container Build     | Docker                                          |
+| Artifact Storage    | Amazon ECR                                      |
+| Kubernetes Platform | Amazon EKS                                      |
+| Deployment          | ArgoCD                                          |
+| Packaging           | Helm                                            |
+| Infrastructure      | Terraform                                       |
+| Secrets             | AWS Secrets Manager + External Secrets Operator |
+| Monitoring          | Prometheus + Grafana                            |
+
+---
+
+# 3. Environment Promotion
+
+This is where your previous questions about tags come in.
+
+The important concept:
+
+**You do not rebuild images for every environment.**
+
+You create one immutable artifact:
+
+Example:
+
+```text
+risk-api:a83f921
+```
+
+Then promote that same image:
+
+```text
+Development
+      |
+      v
+Staging
+      |
+      v
+Production
+```
+
+Your environments have different Helm values:
+
+Example:
+
+```
+helm/
+ |
+ └── risk-api/
+      |
+      ├── values.yaml
+      |
+      ├── values-dev.yaml
+      |
+      ├── values-staging.yaml
+      |
+      └── values-prod.yaml
+```
+
+Only configuration changes.
+
+The image stays:
+
+```
+risk-api:a83f921
+```
+
+---
+
+# 4. Security Gates
+
+Your pipeline should include:
+
+## Pull Request
+
+Before merge:
+
+```
+Pull Request
+
+ |
+ +-- pytest
+ |
+ +-- ruff
+ |
+ +-- dependency scan
+ |
+ +-- secret scan
+ |
+ +-- container scan
+ |
+ v
+
+Approved
+```
+
+Examples:
+
+| Security Control           | Tool                   |
+| -------------------------- | ---------------------- |
+| Dependency vulnerabilities | Dependabot / Snyk      |
+| Container vulnerabilities  | Trivy                  |
+| Secrets detection          | GitHub Secret Scanning |
+| IAM security               | AWS IAM policies       |
+
+---
+
+# 5. How artifacts are deployed
+
+Your artifact flow:
+
+```
+Developer Code
+
+    |
+    v
+
+GitHub Actions
+
+    |
+    v
+
+Docker Image
+
+    |
+    v
+
+Amazon ECR
+
+    |
+    v
+
+Helm Chart
+
+    |
+    v
+
+ArgoCD
+
+    |
+    v
+
+Amazon EKS
+```
+
+---
+
+# 6. Explain your choices
+
+Your PDF should answer this:
+
+---
+
+## GitHub Actions
+
+Why?
+
+Security:
+
+* Automated checks before merge
+* Prevents insecure code reaching main
+
+Reliability:
+
+* Repeatable pipelines
+* Same workflow every time
+
+Developer Experience:
+
+* Fast feedback on PRs
+
+Speed:
+
+* Parallel jobs
+* Automated validation
+
+---
+
+## Amazon ECR
+
+Why?
+
+Security:
+
+* IAM controlled access
+* Image scanning
+* Private registry
+
+Reliability:
+
+* Highly available AWS service
+
+Developer Experience:
+
+* Kubernetes integrates directly
+
+Speed:
+
+* Cached image pulls
+
+---
+
+## ArgoCD
+
+Why?
+
+Security:
+
+* Kubernetes changes are Git controlled
+* No manual kubectl deployments
+
+Reliability:
+
+* Automatic drift detection
+* Rollback support
+
+Developer Experience:
+
+* Developers change configuration through Git
+
+Speed:
+
+* Automatic synchronization
+
+---
+
+## Amazon EKS
+
+Why?
+
+Security:
+
+* Managed Kubernetes control plane
+* IAM integration
+
+Reliability:
+
+* Multi-AZ architecture
+
+Scalability:
+
+* Horizontal pod autoscaling
+
+---
+
+# 7. Secrets and Config
+
+Do not put secrets in:
+
+```
+values.yaml
+```
+
+Instead:
+
+```
+AWS Secrets Manager
+
+        |
+        v
+
+External Secrets Operator
+
+        |
+        v
+
+Kubernetes Secret
+
+        |
+        v
+
+Application Pod
+```
+
+---
+
+# Your current demo progress
+
+You already have:
+
+✅ Flask toy application
+✅ Tests
+✅ Linting
+✅ Docker image
+✅ GitHub Actions starting
+
+Next pieces to implement:
+
+1. Add security scanning to GitHub Actions
+2. Add Docker image tagging strategy
+3. Add ECR push
+4. Add Helm deployment
+5. Add ArgoCD structure
+6. Create architecture diagram
+7. Write PDF explanation
+
+That will directly answer the challenge. You do **not** need a complicated ML model; the platform pipeline is the actual deliverable.
+----
+Good. Now your CI pipeline is doing something meaningful. Let's connect it back to the interview challenge.
+
+Your current pipeline flow is:
+
+```text
+Developer
+   |
+   | git push / Pull Request
+   v
+GitHub Actions CI
+   |
+   +--> Tests
+   |
+   +--> Lint
+   |
+   +--> Dependency Security Scan
+   |
+   +--> Secret Scan
+   |
+   +--> Docker Build
+   |
+   +--> Push Image to ECR
+```
+
+Now let's explain each piece as a **security gate**.
+
+---
+
+# 1. Pull Request is the first gate
+
+A developer does:
+
+```bash
+git checkout main
+git pull
+git checkout -b feature/payment-change
+
+# make code changes
+
+git push origin feature/payment-change
+```
+
+They open a PR:
+
+```text
+feature/payment-change
+          |
+          v
+        main
+```
+
+The PR triggers:
+
+```yaml
+on:
+  pull_request:
+    branches:
+      - main
+```
+
+The code is **not merged yet**.
+
+The pipeline evaluates it first.
+
+This is the first guardrail:
+
+> "No unverified code reaches main."
+
+---
+
+# 2. Unit tests = functional safety gate
+
+Your step:
+
+```yaml
+- name: Run tests
+  run: |
+    make test
+```
+
+Runs:
+
+```text
+pytest
+```
+
+Example:
+
+Developer changes:
+
+```python
+def predict_risk():
+    return "LOW"
+```
+
+But the test expects:
+
+```python
+assert risk_level == "HIGH"
+```
+
+Pipeline:
+
+```
+Tests ❌
+```
+
+Merge blocked.
+
+Purpose:
+
+> Prevent broken application behavior from being promoted.
+
+---
+
+# 3. Lint = code quality gate
+
+Your step:
+
+```yaml
+- name: Run lint
+  run: |
+    make lint
+```
+
+Runs:
+
+```text
+ruff
+```
+
+Example:
+
+Bad code:
+
+```python
+import os
+import flask
+import json
+```
+
+Pipeline:
+
+```
+Lint ❌
+```
+
+Purpose:
+
+> Enforce engineering standards automatically.
+
+---
+
+# 4. Dependency scan = supply chain security gate
+
+Your step:
+
+```yaml
+- name: Dependency security scan
+  run:
+    pip-audit
+```
+
+It checks your packages.
+
+Example:
+
+Your app has:
+
+```
+Flask==2.0.0
+```
+
+but that version has a known vulnerability.
+
+Pipeline:
+
+```
+pip-audit ❌
+```
+
+Merge blocked.
+
+Purpose:
+
+> Prevent known vulnerable libraries from entering production.
+
+---
+
+# 5. Secret scanning = credential leak prevention
+
+Your step:
+
+```yaml
+- name: Secret scanning
+  uses: gitleaks/gitleaks-action@v2
+```
+
+Example developer accidentally commits:
+
+```python
+AWS_SECRET_KEY="AKIAxxxxxxxx"
+```
+
+Pipeline:
+
+```
+gitleaks ❌
+```
+
+Merge blocked.
+
+Purpose:
+
+> Prevent credentials from entering source control.
+
+---
+
+# 6. Docker build = deployment readiness gate
+
+Your step:
+
+```yaml
+docker build
+```
+
+Checks:
+
+* Dockerfile works
+* dependencies install
+* application can become a container
+
+Example:
+
+Developer changes:
+
+```dockerfile
+FROM python:3.11
+
+COPY missing_file .
+```
+
+Build fails:
+
+```
+Docker build ❌
+```
+
+Purpose:
+
+> Only deploy artifacts that can actually run.
+
+---
+
+# 7. ECR push = artifact creation
+
+After everything passes:
+
+```
+Tests       ✅
+Lint        ✅
+Security    ✅
+Docker      ✅
+```
+
+Only then:
+
+```
+Docker Image
+       |
+       v
+ECR
+```
+
+Example:
+
+```
+037229268993.dkr.ecr.us-east-1.amazonaws.com/risk-api:a83f921
+```
+
+This is now your immutable artifact.
+
+---
+
+# How this maps to the challenge
+
+The challenge asks:
+
+> Design a secure developer-friendly release pipeline with guard rails.
+
+You can explain:
+
+> "The CI pipeline acts as the first control point. Pull requests trigger automated validation including unit tests, static analysis, dependency vulnerability scanning, secret detection, and container build validation. Only validated code can produce a deployable container artifact stored in ECR."
+
+---
+
+# What is still missing for the full challenge
+
+You have completed:
+
+✅ CI system
+✅ Security gates
+✅ Artifact storage (ECR)
+
+Remaining:
+
+## 1. Environment promotion
+
+Need:
+
+```
+dev
+ |
+ v
+staging
+ |
+ v
+production
+```
+
+## 2. Helm deployment
+
+Need:
+
+```
+ECR Image
+     |
+     v
+Helm values
+     |
+     v
+Kubernetes Deployment
+```
+
+## 3. ArgoCD GitOps
+
+Need:
+
+```
+Git repo
+   |
+   v
+ArgoCD
+   |
+   v
+EKS
+```
+
+## 4. Secrets/config
+
+Need:
+
+```
+AWS Secrets Manager
+        |
+        v
+Kubernetes Secrets
+        |
+        v
+Application
+```
+
+Your CI part is now the foundation. Next we should build the **CD side: how the ECR image gets promoted from dev → staging → production using Helm + ArgoCD**.
+----
+\at what point does it get merged to main
+
+
+Great question. This is the missing piece in the flow.
+
+In a **senior platform engineering setup**, the code is **not automatically merged to `main` just because CI passes** (usually). The normal flow is:
+
+```text
+Developer
+   |
+   v
+Feature branch
+   |
+   v
+Pull Request
+   |
+   v
+CI runs (security gates)
+   |
+   +----------------+
+   |                |
+ FAIL             PASS
+   |                |
+ Fix code          |
+                  v
+          Required approvals
+                  |
+                  v
+              Merge to main
+```
+
+---
+
+## Step-by-step example
+
+### 1. Developer creates a branch
+
+Starting from main:
+
+```bash
+git checkout main
+git pull
+
+git checkout -b feature/payment-validation
+```
+
+Developer changes payment code.
+
+---
+
+### 2. Push branch
+
+```bash
+git add .
+git commit -m "add payment validation"
+
+git push origin feature/payment-validation
+```
+
+Now GitHub has:
+
+```text
+main
+ |
+ |
+feature/payment-validation
+```
+
+---
+
+### 3. Developer opens Pull Request
+
+The PR says:
+
+```
+feature/payment-validation
+            |
+            v
+          main
+```
+
+GitHub triggers:
+
+```text
+GitHub Actions
+       |
+       +-- pytest
+       +-- lint
+       +-- security scan
+       +-- secret scan
+       +-- docker build
+```
+
+---
+
+### 4. CI passes
+
+You get:
+
+```
+✓ Tests passed
+✓ Lint passed
+✓ Security scan passed
+✓ Docker build passed
+```
+
+But the PR is still:
+
+```
+OPEN
+```
+
+---
+
+### 5. Branch protection rules decide if it can merge
+
+This is another guardrail.
+
+In GitHub:
+
+```
+Repository Settings
+    |
+    v
+Branches
+    |
+    v
+main protection rules
+```
+
+Configure:
+
+Require:
+
+✅ Pull request before merging
+✅ Require approvals
+✅ Require status checks to pass
+✅ Require conversation resolution
+
+Example:
+
+```
+main branch
+
+Cannot merge unless:
+
+[✓] CI Pipeline passed
+[✓] 1 engineer approved
+```
+
+---
+
+### 6. Merge happens
+
+Now a developer or reviewer clicks:
+
+```
+Merge Pull Request
+```
+
+Git creates:
+
+```
+feature/payment-validation
+             |
+             v
+            main
+```
+
+Now your pipeline triggers:
+
+```yaml
+on:
+  push:
+    branches:
+      - main
+```
+
+This is where you create the production artifact:
+
+```
+main
+ |
+ v
+CI
+ |
+ v
+Docker build
+ |
+ v
+ECR
+ |
+ v
+risk-api:a83f921
+```
+
+---
+
+## Where does promotion happen?
+
+After merge to main:
+
+```
+main
+ |
+ v
+Build image
+ |
+ v
+ECR
+ |
+ v
+Deploy DEV
+ |
+ v
+Testing
+ |
+ v
+Promote STAGING
+ |
+ v
+Approval
+ |
+ v
+Promote PROD
+```
+
+The important distinction:
+
+### CI answers:
+
+> "Is this code safe to merge?"
+
+### CD answers:
+
+> "How do we safely move this approved artifact through environments?"
+
+---
+
+For your take-home, I would describe the flow as:
+
+```
+Developer Branch
+       |
+       v
+Pull Request
+       |
+       v
+CI Security Gates
+       |
+       v
+Approval + Branch Protection
+       |
+       v
+Merge to Main
+       |
+       v
+Build Immutable Artifact
+       |
+       v
+ECR
+       |
+       v
+ArgoCD Promotion
+       |
+       v
+EKS Environments
+```
+
+Your current demo is now at the point:
+
+**PR → CI gates → merge → build/push artifact.**
+
+The next thing we should implement is the **"after merge to main" part**, because that is where environment promotion begins.
+----
+
+You are right to call that out. I jumped ahead.
+
+You **have not completed**:
+
+```text
+Developer
+   |
+   v
+Pull Request
+   |
+   v
+CI Security Gates
+   |
+   v
+Merge to main
+   |
+   v
+Docker Image
+   |
+   v
+ECR
+```
+
+You have only completed part of it.
+
+Let's put your demo exactly where it is.
+
+---
+
+## What you have actually completed
+
+### 1. Developer creates code ✅
+
+You have:
+
+```text
+platform_architecture_design
+```
+
+with:
+
+```text
+app/risk_api
+```
+
+You created:
+
+* Flask API
+* model
+* tests
+* Dockerfile
+* Makefile
+
+---
+
+### 2. CI pipeline exists ✅
+
+Your GitHub Actions does:
+
+```text
+Pull Request
+      |
+      v
+GitHub Actions
+      |
+      +--> pytest
+      |
+      +--> ruff lint
+      |
+      +--> pip-audit
+      |
+      +--> gitleaks
+      |
+      +--> docker build
+```
+
+This part is done.
+
+---
+
+### 3. ECR push works manually ✅
+
+You manually proved:
+
+```text
+Docker image
+      |
+      v
+ECR
+```
+
+---
+
+## What is NOT done yet
+
+### A. CI does not yet push the image automatically
+
+Your workflow has:
+
+```yaml
+docker push
+```
+
+but we have not confirmed a successful GitHub Actions run that:
+
+1. builds the image
+2. tags it
+3. pushes it to ECR
+
+The AWS OIDC part just started working.
+
+We need to verify:
+
+GitHub Actions:
+
+```text
+Configure AWS credentials ✅
+Login ECR ✅
+Build image ✅
+Push image ✅
+```
+
+---
+
+### B. Pull Request protection is not configured
+
+Right now, GitHub will not necessarily block merging.
+
+You need:
+
+GitHub:
+
+```
+Repository
+  |
+  Settings
+  |
+  Branches
+  |
+  main
+  |
+  Branch protection rules
+```
+
+Enable:
+
+```
+☑ Require pull request before merging
+
+☑ Require status checks to pass
+
+☑ Require branches to be up to date
+
+☑ Do not allow bypassing
+```
+
+Then select:
+
+```
+CI Pipeline
+```
+
+as required.
+
+---
+
+### C. The merge flow has not been tested
+
+The actual test should be:
+
+1. Create branch:
+
+```bash
+git checkout -b test-change
+```
+
+2. Change something small.
+
+Example:
+
+```python
+return "LOW"
+```
+
+3. Push:
+
+```bash
+git push origin test-change
+```
+
+4. Open PR.
+
+You should see:
+
+```text
+CI Pipeline running
+```
+
+5. Wait for:
+
+```
+Tests        ✅
+Lint         ✅
+Security     ✅
+Docker       ✅
+ECR Push     ✅
+```
+
+6. Merge button becomes available.
+
+---
+
+## So the next step is NOT environment promotion.
+
+The next step is:
+
+# Finish CI → Merge → ECR
+
+Your immediate task:
+
+1. Create a test branch.
+2. Open a PR.
+3. Confirm GitHub Actions runs.
+4. Confirm the image appears in ECR.
+
+Only after that we move to:
+
+```
+ECR
+ |
+ v
+Environment promotion
+ |
+ v
+Dev → Staging → Production
+```
+
+You were correct — I skipped a major milestone. We need to finish the release pipeline foundation before building CD.

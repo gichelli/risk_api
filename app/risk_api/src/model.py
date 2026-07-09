@@ -34,7 +34,7 @@ def predict_risk(text: str) -> Dict:
         if word in text:
             return {
                 "risk_level": "MEDIUM",
-                "confidence": 0.70
+                "confidence": 0.80
             }
 
     return {
