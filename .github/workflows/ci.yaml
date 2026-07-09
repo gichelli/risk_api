@@ -12,7 +12,6 @@ on:
 permissions:
   contents: read
   pull-requests: read
-  id-token: write
 
 
 
@@ -61,10 +60,14 @@ jobs:
       uses: gitleaks/gitleaks-action@v2
 
   build-and-push:
-
+  
     needs: validate
 
     if: github.ref == 'refs/heads/master'
+
+    permissions:
+      contents: read
+      id-token: write
 
     runs-on: ubuntu-latest
 
