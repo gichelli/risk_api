@@ -62,6 +62,20 @@ jobs:
       run: |
         docker build \
         -t risk-api:test .
+    
+
+    - name: Docker smoke test
+      run: |
+        docker run -d \
+          --name risk-api-test \
+          -p 8080:8080 \
+          risk-api:test
+
+        sleep 5
+
+        curl http://localhost:8080/health
+
+        docker stop risk-api-test
 
 
     # - name: Secret scanning
