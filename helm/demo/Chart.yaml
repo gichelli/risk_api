@@ -1,8 +1,0 @@
-apiVersion: v2
-name: platform
-description: Demo application Helm chart for platform engineering pipeline
-type: application
-
-version: 0.1.0
-
-appVersion: "1.0"

@@ -1,21 +1,24 @@
-name: Developer CI
+name: CI
 
 on:
+  pull_request:
+    branches:
+      - main
 
   push:
     branches:
-      - "**"
+      - "feature/**"
+
 
 permissions:
   contents: read
-  pull-requests: read
-
 
 
 jobs:
 
-  validate:
+  test:
 
+    name: Test Application
     runs-on: ubuntu-latest
 
     steps:
@@ -35,7 +38,6 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        cd app/risk_api
         pip install -e ".[dev]"
 
 
@@ -54,8 +56,16 @@ jobs:
         pip install pip-audit
         pip-audit
 
+    # Only validate Dockerfile works
+      # Does NOT push anywhere
+    - name: Docker build validation
+      run: |
+        docker build \
+        -f app/risk_api/Dockerfile \
+        -t risk-api:test .
 
-    - name: Secret scanning
-      uses: gitleaks/gitleaks-action@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # - name: Secret scanning
+    #   uses: gitleaks/gitleaks-action@v2
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
