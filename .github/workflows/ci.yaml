@@ -12,21 +12,24 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
+
+#################################
+# Unit Tests + Lint
+#################################
 
 jobs:
 
   test:
 
-    name: Test Application
+    name: Unit Tests
     runs-on: ubuntu-latest
 
     steps:
 
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
 
 
     - name: Setup Python
@@ -51,34 +54,179 @@ jobs:
         make lint
 
 
-    - name: Dependency security scan
+
+#################################
+# Dependency Vulnerability Scan
+#################################
+
+  dependency-scan:
+
+    name: Dependency Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+
+    - name: Install pip-audit
       run: |
         pip install pip-audit
+
+
+    - name: Scan dependencies
+      run: |
         pip-audit
 
-    # Only validate Dockerfile works
-      # Does NOT push anywhere
+
+
+#################################
+# Secret Detection
+#################################
+
+  secret-scan:
+
+    name: Secret Scan
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+
+    - name: Run Gitleaks
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+
+#################################
+# Static Application Security Test
+#################################
+
+  sast:
+
+    name: SAST Code Scan
+    runs-on: ubuntu-latest
+
+
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+
+    - name: Run Semgrep
+      uses: semgrep/semgrep-action@v1
+      with:
+        config: |
+          p/python
+          p/security-audit
+
+
+
+#################################
+# Docker Build + Scan
+#################################
+
+  docker-security:
+
+    name: Docker Security Scan
+    runs-on: ubuntu-latest
+
+
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+
+    #
+    # Build image only
+    #
     - name: Docker build validation
       run: |
-        docker build \
-        -t risk-api:test .
-    
 
-    - name: Docker smoke test
+        docker build \
+          -t risk-api:test .
+
+
+    #
+    # Container vulnerability scan
+    #
+    - name: Trivy container scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: risk-api:test
+        format: table
+        vuln-type: os,library
+        severity: CRITICAL,HIGH
+        exit-code: 0
+
+
+
+#################################
+# Docker Smoke Test
+#################################
+
+  smoke-test:
+
+    name: Application Smoke Test
+
+    needs:
+      - docker-security
+
+    runs-on: ubuntu-latest
+
+
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+
+    - name: Build image
+
       run: |
+
+        docker build \
+          -t risk-api:test .
+
+
+    - name: Run container
+
+      run: |
+
         docker run -d \
           --name risk-api-test \
           -p 8080:8080 \
           risk-api:test
 
+
         sleep 5
 
-        curl http://localhost:8080/health
+
+    - name: Health check
+
+      run: |
+
+        curl --fail \
+          http://localhost:8080/health
+
+
+    - name: Cleanup
+
+      run: |
 
         docker stop risk-api-test
-
-
-    # - name: Secret scanning
-    #   uses: gitleaks/gitleaks-action@v2
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
