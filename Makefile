@@ -1,25 +1,45 @@
-.PHONY: install test lint format run docker-build docker-run
+.PHONY: install test lint format run docker-build docker-run clean
 
-APP_DIR=app/risk_api
-IMAGE_NAME=risk-api
+
+IMAGE_NAME ?= risk-api
+PORT ?= 8080
+
 
 install:
-	cd $(APP_DIR) && python -m pip install -e ".[dev]"
+	python -m pip install --upgrade pip
+	pip install -e ".[dev]"
+
 
 test:
-	cd $(APP_DIR) && python -m pytest
+	python -m pytest
+
 
 lint:
-	cd $(APP_DIR) && ruff check .
+	ruff check .
+
 
 format:
-	cd $(APP_DIR) && ruff format .
+	ruff format .
+
 
 run:
-	cd $(APP_DIR) && gunicorn --bind 0.0.0.0:8080 src.app:app
+	gunicorn \
+	--bind 0.0.0.0:$(PORT) \
+	risk_api.app:app
+
 
 docker-build:
-	docker build -t $(IMAGE_NAME):latest $(APP_DIR)
+	docker build \
+	-t $(IMAGE_NAME):latest .
+
 
 docker-run:
-	docker run --rm -p 8080:8080 $(IMAGE_NAME):latest
+	docker run \
+	--rm \
+	-p $(PORT):8080 \
+	$(IMAGE_NAME):latest
+
+
+clean:
+	find . -type d -name "__pycache__" -delete
+	find . -type d -name "*.egg-info" -delete
