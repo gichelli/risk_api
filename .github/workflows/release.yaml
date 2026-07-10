@@ -69,7 +69,7 @@ jobs:
           await github.rest.repos.createDispatchEvent({
             owner: process.env.GITOPS_OWNER,
             repo: process.env.GITOPS_REPO,
-            event_type: "new-image",
+            event_type: "image-published",
             client_payload: {
               image_tag: "${{ github.sha }}"
             }
