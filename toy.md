@@ -3063,3 +3063,92 @@ production values.yaml
     v
 PRODUCTION
 ```
+
+----
+
+```
+Developer changes code
+        |
+        v
+Pull Request
+        |
+        v
+CI tests
+        |
+        +--> Unit tests
+        +--> Lint
+        +--> Security scans
+        +--> Build validation
+        |
+        v
+Merge to main
+        |
+        v
+Build Docker image
+        |
+        v
+Push image to ECR
+        |
+        v
+Deploy DEV (ArgoCD)
+        |
+        v
+DEV environment tests
+        |
+        +--> Smoke tests
+        +--> Integration tests
+        |
+        v
+Promote QA
+        |
+        v
+QA testing
+        |
+        +--> Regression tests
+        +--> Functional tests
+        |
+        v
+Promote Staging
+        |
+        v
+Production
+```
+
+---
+
+promote-dev.yaml
+        |
+        v
+Update environments/dev/values.yaml
+        |
+        v
+ArgoCD detects Git change
+        |
+        v
+ArgoCD deploys DEV
+        |
+        v
+Deployment complete
+        |
+        v
+RUN DEV TESTS  <--------- this is the missing step
+        |
+        +--> Smoke tests
+        |
+        +--> Integration tests
+        |
+        v
+Tests PASS?
+        |
+        +------ NO ---> STOP
+        |
+        +------ YES
+                |
+                v
+          promote-qa.yaml
+                |
+                v
+          Update environments/qa/values.yaml
+                |
+                v
+          ArgoCD deploys QA

@@ -6,12 +6,12 @@ PORT ?= 8080
 
 
 install:
-	python -m pip install --upgrade pip
+	python3 -m pip install --upgrade pip
 	pip install -e ".[dev]"
 
 
 test:
-	python -m pytest
+	python3 -m pytest
 
 
 lint:
@@ -25,7 +25,7 @@ format:
 run:
 	gunicorn \
 	--bind 0.0.0.0:$(PORT) \
-	risk_api.app:app
+	src.app:app
 
 
 docker-build:
