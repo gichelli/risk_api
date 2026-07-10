@@ -3,7 +3,7 @@ README.md
 
 ## Local Development Setup
 
-This sectionddd explains how to set up the local development environment for the demo application.
+This sectiondddddd explains how to set up the local development environment for the demo application.
 
 The project uses:
 
