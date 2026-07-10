@@ -248,7 +248,7 @@ Kubernetes Deployment
 
 The existing release process creates friction by relying on manual steps, inconsistent deployment workflows, and delayed feedback loops. These challenges increase delivery time, create operational risk, and make it difficult to maintain consistent security and reliability standards across environments.
 
-A modern platform engineering approach requires a release pipeline that provides automation, standardization, and guard rails while allowing engineering teams to deliver software quickly and safely.
+A modern platform engineering approach requires a release pipeline that provides autoddddmation, standardization, and guard rails while allowing engineering teams to deliver software quickly and safely.
 
 ### Objective
 
