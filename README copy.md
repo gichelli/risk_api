@@ -259,7 +259,7 @@ The proposed solution introduces automated workflows, infrastructure-as-code pra
 ### Key Goals
 
 The release pipeline is designed to:
-
+rrrr
 - Automate build, test, security validation, and deployment workflows.
 - Provide fast feedback to developers through automated validation.
 - Implement security controls throughout the software delivery lifecycle.
