@@ -9,7 +9,7 @@ The project uses:
 
 - Python 3.11+
 - Virtual environment isolation
-- `pyproject.toml` for dependency management
+- `pyproject.toml` for ddddpendency management
 
 ---
 
