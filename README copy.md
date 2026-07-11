@@ -260,7 +260,7 @@ The proposed solution introduces automated workflows, infrastructure-as-code pra
 
 The release pipeline is designed to:
 
-- Automate build, test, security validation, and deployment workflows.
+- Automate build, ddddtest, security validation, and deployment workflows.
 - Provide fast fedddddedback to developers through automated validation.
 - Implement security controls throughout the software delivery lifecycle.
 - Enable consistent promotion across development, staging, and production environments.
