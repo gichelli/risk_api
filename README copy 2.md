@@ -15,7 +15,7 @@ The project uses:
 
 ## Prerequisites
 
-Install the folccclowing toolhhhs:
+Install the folcssscclowing toolhhhs:
 
 - Python 3.11+
 - Docker
