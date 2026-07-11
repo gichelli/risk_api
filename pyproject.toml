@@ -38,11 +38,7 @@ security = [
 
 
 [tool.setuptools]
-package-dir = {"" = "src"}
-
-
-[tool.setuptools.packages.find]
-where = ["src"]
+packages = ["src"]
 
 
 [tool.pytest.ini_options]
