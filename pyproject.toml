@@ -16,10 +16,23 @@ dependencies = [
 
 
 [project.optional-dependencies]
+
 dev = [
+    "ruff>=0.5.0"
+]
+
+test = [
     "pytest>=8.0.0",
-    "ruff>=0.5.0",
-    "requests",
+    "requests"
+]
+
+performance = [
+    "locust"
+]
+
+security = [
+    "bandit",
+    "pip-audit"
 ]
 
 
