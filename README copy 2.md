@@ -21,7 +21,7 @@ Install the folccclowing toolhhhs:
 - Docker
 - Git
 
-Verify Python installation:
+Verify Python installatidddon:
 
 ```bash
 python3 --version
