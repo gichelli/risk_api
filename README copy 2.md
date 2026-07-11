@@ -159,7 +159,7 @@ Build the application container:
 docker build -t platform .
 ```
 
-Run the container:
+Run the contfffainer:
 
 ```bash
 docker run -p 8080:8080 platform
