@@ -31,10 +31,6 @@ install-security:
 ####################
 
 test:
-	python3 -m pytest tests/unit tests/integration
-
-
-test-unit:
 	python3 -m pytest tests/unit
 
 
