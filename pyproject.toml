@@ -16,19 +16,29 @@ dependencies = [
 
 
 [project.optional-dependencies]
+
 dev = [
+    "ruff>=0.5.0"
+]
+
+test = [
     "pytest>=8.0.0",
-    "ruff>=0.5.0",
-    "requests",
+    "pytest-cov>=5.0.0",
+    "requests"
+]
+
+performance = [
+    "locust"
+]
+
+security = [
+    "bandit",
+    "pip-audit"
 ]
 
 
 [tool.setuptools]
-package-dir = {"" = "src"}
-
-
-[tool.setuptools.packages.find]
-where = ["src"]
+packages = ["src"]
 
 
 [tool.pytest.ini_options]

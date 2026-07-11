@@ -1,4 +1,7 @@
-.PHONY: install test lint format run docker-build docker-run clean
+.PHONY: install test test-unit test-integration \
+        smoke-test functional-test regression-test \
+        e2e-test performance-test security-test \
+        lint format run docker-build docker-run clean
 
 
 IMAGE_NAME ?= risk-api
@@ -7,39 +10,73 @@ PORT ?= 8080
 
 install:
 	python3 -m pip install --upgrade pip
-	pip install -e ".[dev]"
+	pip install -e .
 
+
+install-test:
+	pip install -e ".[test]"
+
+
+install-performance:
+	pip install -e ".[performance]"
+
+
+install-security:
+	pip install -e ".[security]"
+
+
+
+####################
+# LOCAL DEVELOPMENT
+####################
 
 test:
-	python3 -m pytest
+	python3 -m pytest tests/unit
 
 
-lint:
-	ruff check .
+test-integration:
+	python3 -m pytest tests/integration
 
 
-format:
-	ruff format .
+
+####################
+# DEV ENVIRONMENT
+####################
+
+smoke-test:
+	python3 -m pytest tests/smoke
 
 
-run:
-	gunicorn \
-	--bind 0.0.0.0:$(PORT) \
-	src.app:app
+
+####################
+# QA ENVIRONMENT
+####################
+
+functional-test:
+	python3 -m pytest tests/functional
 
 
-docker-build:
-	docker build \
-	-t $(IMAGE_NAME):latest .
+regression-test:
+	python3 -m pytest tests/regression
 
 
-docker-run:
-	docker run \
-	--rm \
-	-p $(PORT):8080 \
-	$(IMAGE_NAME):latest
+
+####################
+# STAGING ENVIRONMENT
+####################
+
+e2e-test:
+	python3 -m pytest tests/e2e
 
 
-clean:
-	find . -type d -name "__pycache__" -delete
-	find . -type d -name "*.egg-info" -delete
+performance-test:
+	locust \
+	--headless \
+	--users 10 \
+	--spawn-rate 2 \
+	--run-time 1m \
+	--host $(STAGING_URL)
+
+
+security-scan:
+	python3 -m pytest tests/security
