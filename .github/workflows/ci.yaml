@@ -37,6 +37,11 @@ jobs:
       with:
         python-version: "3.11"
 
+    - name: Debug checkout
+      run: |
+        pwd
+        ls -la
+        cat Makefile
 
     - name: Install dependencies
       run: |
