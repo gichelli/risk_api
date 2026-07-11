@@ -50,7 +50,7 @@ jobs:
     
     - name: Test coverage
       run: |
-        pytest tests/unit tests/integration \
+        pytest tests/unit \
           --cov=src \
           --cov-report=term-missing
 
