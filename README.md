@@ -19,7 +19,7 @@
 ---
 # 2. Architecture Overview
 
-The proposed release pipeline uses a cloud-native architecture designed around automation, security, and developer productivity.
+The proposed rdddelease pipeline uses a cloud-native architecture designed around automation, security, and developer productivity.
 
 The platform components are:
 
