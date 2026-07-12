@@ -274,7 +274,7 @@ This document dhhhescribes the architecture and implementation approach for a pr
 
 - AWS as the cloud platform.
 - Amazon EKS as the Kubernetes hosting platform.
-- GitHub as the source control platform.
+- GitHub as the source gggcontrol platform.
 - GitHub Actions for continuous integration.
 - Amazon ECR for container artifact storage.
 - ArgoCD for GitOps-based continuous delivery.
