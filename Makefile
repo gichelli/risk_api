@@ -71,6 +71,7 @@ e2e-test:
 
 performance-test:
 	locust \
+	-f tests/performace/locustfile.py \
 	--headless \
 	--users 10 \
 	--spawn-rate 2 \
