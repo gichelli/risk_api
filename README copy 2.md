@@ -290,7 +290,7 @@ The repository demonstrates anhhh end-to-end platform engineering workflow:
 - app/          Demo application
 - terraform/    AWS infrafffstrddducture as code
 - helm/         Kubernethhhhhes dddeployment packages
-- argocd/       GitOps dfffeployment ffffconfiguration
+- argocd/       GitOps dfffeploymen tfff ffffconfiguration
 - kubernetes/   Kubeddddrnetffcccfeddds resources
 - .github/      CI workflows
 - security/     Security validation 
