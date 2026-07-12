@@ -285,7 +285,7 @@ The design focuses on security, reliability, scalability, and developer producti
 
 ## Repository Structure
 
-The repository demonstrates an end-to-end platform engineering workflow:
+The repository demonstrates anhhh end-to-end platform engineering workflow:
 
 - app/          Demo application
 - terraform/    AWS infrastrddducture as code
