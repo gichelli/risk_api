@@ -2,7 +2,7 @@ import os
 import requests
 
 
-BASE_URL = os.environ["BASE_URL"]
+BASE_URL = os.environ["QA_URL"]
 
 
 def test_prediction_api_returns_required_fields():
