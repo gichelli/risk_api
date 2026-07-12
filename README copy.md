@@ -269,7 +269,7 @@ The release pipeline is designed to:
 - Create a rejjjpeatable and auditable deployment process using modern DevOps and GitOps practices.
 
 ## 2. Design Overview
-
+dd
 This document dhhhescribes the architecture and implementation approach for a production-ready release pipeline using:
 
 - AWS as the cloud platform.
