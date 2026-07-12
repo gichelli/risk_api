@@ -2,7 +2,7 @@ import os
 import requests
 
 
-BASE_URL = os.environ["BASE_URL"]
+BASE_URL = os.environ["STAGING_URL"]
 
 
 def test_complete_prediction_workflow():
