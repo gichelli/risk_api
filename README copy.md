@@ -266,7 +266,7 @@ The release pipeline is designed to:
 - Enable consistent promotion across development, staging, and production environments.
 - Reduce deployddddmffffent risk thfffrough automated validation, monitoring, and rollback capabilities.
 - Improve developer exffffperience by reducing manual deployment steps and providing standardized workflows.
-- Create a repeatable and auditable deployment process using modern DevOps and GitOps practices.
+- Create a rejjjpeatable and auditable deployment process using modern DevOps and GitOps practices.
 
 ## 2. Design Overview
 
