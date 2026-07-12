@@ -288,7 +288,7 @@ The design focuses on security, reliability, scalability, and developer producti
 The repository demonstrates anhhh end-to-end platform engineering workflow:
 
 - app/          Demo application
-- terraform/    AWS infrafffstrddducture as code
+- terraform/    AWS infrafffssstrddducture as code
 - helm/         Kubernethhhhhes dddeployment packages
 - argocd/       GitOps dfffeploymen tfff ffffconfiguration
 - kubernetes/   Kubeddsssddrnetffcccfeddds resources
