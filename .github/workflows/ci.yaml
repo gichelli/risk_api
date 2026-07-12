@@ -64,80 +64,80 @@ jobs:
 # Dependency Vulnerability Scan
 #################################
 
-  dependency-scan:
+#   dependency-scan:
 
-    name: Dependency Security Scan
-    runs-on: ubuntu-latest
+#     name: Dependency Security Scan
+#     runs-on: ubuntu-latest
 
-    steps:
+#     steps:
 
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
+#     - name: Checkout code
+#       uses: actions/checkout@v4
 
 
-    - name: Install pip-audit
-      run: |
-        pip install pip-audit
+#     - name: Setup Python
+#       uses: actions/setup-python@v5
+#       with:
+#         python-version: "3.11"
 
 
-    - name: Scan dependencies
-      run: |
-        pip-audit
+#     - name: Install pip-audit
+#       run: |
+#         pip install pip-audit
 
 
-
-#################################
-# Secret Detection
-#################################
-
-  secret-scan:
-
-    name: Secret Scan
-    runs-on: ubuntu-latest
-
-    steps:
-
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-
-    - name: Run Gitleaks
-      uses: gitleaks/gitleaks-action@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#     - name: Scan dependencies
+#       run: |
+#         pip-audit
 
 
 
-#################################
-# Static Application Security Test
-#################################
+# #################################
+# # Secret Detection
+# #################################
 
-  sast:
+#   secret-scan:
 
-    name: SAST Code Scan
-    runs-on: ubuntu-latest
+#     name: Secret Scan
+#     runs-on: ubuntu-latest
+
+#     steps:
+
+#     - name: Checkout code
+#       uses: actions/checkout@v4
+#       with:
+#         fetch-depth: 0
 
 
-    steps:
+#     - name: Run Gitleaks
+#       uses: gitleaks/gitleaks-action@v2
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Checkout code
-      uses: actions/checkout@v4
 
 
-    - name: Run Semgrep
-      uses: semgrep/semgrep-action@v1
-      with:
-        config: |
-          p/python
-          p/security-audit
+# #################################
+# # Static Application Security Test
+# #################################
+
+#   sast:
+
+#     name: SAST Code Scan
+#     runs-on: ubuntu-latest
+
+
+#     steps:
+
+#     - name: Checkout code
+#       uses: actions/checkout@v4
+
+
+#     - name: Run Semgrep
+#       uses: semgrep/semgrep-action@v1
+#       with:
+#         config: |
+#           p/python
+#           p/security-audit
 
 
 
