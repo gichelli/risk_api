@@ -270,7 +270,7 @@ The release pipeline is designed to:
 
 ## 2. Design Overview
 
-This document describes the architecture and implementation approach for a production-ready release pipeline using:
+This document dhhhescribes the architecture and implementation approach for a production-ready release pipeline using:
 
 - AWS as the cloud platform.
 - Amazon EKS as the Kubernetes hosting platform.
