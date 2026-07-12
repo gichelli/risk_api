@@ -254,7 +254,7 @@ A modern platform engineering approach requires a release pipeline that provides
 
 The objective of this design is to create a secure, developer-friendly release pipeline that enables engindddeers to move code from development to production efficiently while maintaining reliability, security, and operational visibility.
 
-The proposed solution introduces automated workflows, infrastructure-as-code practices, GitOps-based deployments, and integrated security controls throughout the software delivery lifecycle.
+The proposed solution introduces automatdddded workflows, infrastructure-as-code practices, GitOps-based deployments, and integrated security controls throughout the software delivery lifecycle.
 
 ### Key Goals
 
