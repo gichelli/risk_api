@@ -1,297 +1,192 @@
-# Secure Developer-Friendly Release Pipeline Design
+# Risk API
 
-## 1. Introduction and Problem Statement
-    - Current pipeline pain points
-    - Goals
-    - Why automation is needed
+A production-style REST API service that provides risk prediction capabilities.
+The application is containerized with Docker and deployed through an automated
+CI/CD and GitOps delivery pipeline to Kubernetes.
 
-## 2. Architecture Overview
-    - AWS
-    - EKS
-    - GitHub
-    - GitHub Actions
-    - ECR
-    - Helm
-    - ArgoCD
-    - Terraform
-    - Secrets Manager
+## Overview
 
----
-# 2. Architecture Overview
+## Architecture Overview
 
-The proposed rdddelease pipeline uses a cloud-native architecture designed around automation, security, and developer productivity.
+The Risk API repository implements the application delivery lifecycle from
+source code commit through container image publication.
 
-The platform components are:
+The repository is responsible for:
 
-- Cloud Provider: AWS
-- Container Platform: Amazon EKS Kubernetes
-- Source Control: GitHub
-- Continuous Integration: GitHub Actions
-- Container Registry: Amazon ECR
-- Continuous Delivery: ArgoCD using GitOps principles
-- Infrastructure as Code: Terraform
-- Secrets Management: AWS Secrets Manager with External Secrets Operator ..
-
-High-level workflow:
-
-Developer
-    |
-    v
-GitHub Pull Request
-    |
-    v
-GitHub Actions CI
-    |
-    +--> Unit Tests
-    |
-    +--> Linting
-    |
-    +--> Security Scanning
-    |
-    +--> Docker Build
-    |
-    v
-Amazon ECR
-    |
-    v
-ArgoCD
-    |
-    v
-Amazon EKS
-    |
-    v
-Environment Deployment
----
-
-## 3. Demo Application Overview
-    - What the application does
-    - Why this demo model/API exists
-
----
-# 3. Demo Application Overview
-
-To demonstrate the release pipeline, this repository contains a small Flask-based risk classification API.
-
-The application simulates a machine learning service that receives text input and returns a risk classification.
-
-Example:
-
-Request:
-
-{
-  "text": "armed conflict reported"
-}
-
-Response:
-
-{
-  "risk_level": "HIGH",
-  "confidence": 0.90
-}
-
-The model logic is intentionally simple because the focus of this project is not model accuracy, but demonstrating:
-
-- Application packaging
+- Flask API application code
 - Automated testing
-- Containerization
-- CI/CD workflows
-- Kubernetes deployment
-- Production promotion strategies
-----
+- Code quality validation
+- Security scanning
+- Docker image creation
+- Publishing images to Amazon ECR
+- Triggering GitOps deployment workflows
 
 
-## 4. Local Developer Setup
-    - Python venv
-    - Dependencies
-    - Make commands
-    - Running tests
-    - Running locally
-
----
-Copy and paste this directly into your `README.md`:
-
-```markdown
-# 4. Local Developer Setup
-
-This section describes how developers can set up the application locally and validate changes before opening a pull request.
-
-The local workflow is designed to match the CI pipeline as closely as possible:
+## Architecture
 
 ```
 
-Developer Change
-|
-v
-Install Dependencies
-|
-v
-Run Tests
-|
-v
-Run Linting
-|
-v
-Build Docker Image
-|
-v
-Submit Pull Request
+Developer
+    |
+    | Pull Request
+    v
+GitHub Repository
+(risk_api)
+    |
+    |
+    +-----------------------------+
+    |                             |
+    v                             v
+CI Pipeline                  Security Pipeline
+GitHub Actions               GitHub Actions
+    |                             |
+    |                             |
+    +-------------+---------------+
+                  |
+                  v
+          Docker Build Validation
+                  |
+                  v
+          Container Security Scan
+          (Trivy)
+                  |
+                  v
+          Application Smoke Test
+                  |
+                  v
+             Merge to main
+                  |
+                  v
+          Release Pipeline
+                  |
+                  v
+          Build Docker Image
+                  |
+                  v
+          Amazon ECR
+                  |
+                  v
+     GitHub Repository Dispatch Event
+                  |
+                  v
+        GitOps Repository Update
 
 ````
 
+## Deployment Architecture
+
+Deployment is managed outside this repository using GitOps principles.
+
+The deployment flow is:
+
+```
+risk_api
+   |
+   | Docker Image
+   v
+Amazon ECR
+   |
+   |
+GitOps Repository
+   |
+   | Helm Values Update
+   v
+ArgoCD
+   |
+   v
+Amazon EKS
+   |
+   v
+Risk API Kubernetes Deployment
+```
+
+The separation between application and deployment repositories provides:
+
+- Independent application and infrastructure lifecycle management
+- Auditable deployment changes
+- Environment promotion controls
+- Declarative Kubernetes state management
+
+## Application Stack
+
+| Component | Technology |
+|---|---|
+| API Framework | Flask |
+| Language | Python 3.11 |
+| Container Runtime | Docker |
+| Container Registry | Amazon ECR |
+| Orchestration | Kubernetes |
+| Cloud Platform | AWS EKS |
+| Deployment | Helm + ArgoCD |
+| CI/CD | GitHub Actions |
+
 ---
+
+# Local Development
 
 ## Prerequisites
 
-Install the following tools:
+Install:
 
 - Python 3.11+
 - Docker
-- Git
 - Make
 
-Verify installations:
-
-```bash
-python3 --version
-docker --version
-make --version
-````
-
----
-
-## Clone Repository
-
-Clone the repository ->
+Clone the repository:
 
 ```bash
 git clone <repository-url>
 
-cd platform_architecture_design
-```
+cd risk_api
+````
 
 ---
 
-## Create Python Virtual Environment
+## Install Dependencies
 
-Create a virtual environment:
-
-```bash
-python3 -m venv .venv
-```
-
-Activate the environment:
-
-### macOS / Linux
+Create virtual environment:
 
 ```bash
+python -m venv .venv
+
 source .venv/bin/activate
 ```
 
-Verify:
+Install packages:
 
 ```bash
-which python
-```
-
-Expected:
-
-```text
-platform_architecture_design/.venv/bin/python
+pip install -r requirements.txt
 ```
 
 ---
 
-## Install Application Dependencies
+# Running the Application
 
-Install the application and development dependencies:
-
-```bash
-make install
-```
-
-Dependencies are managed using:
-
-```
-app/risk_api/pyproject.toml
-```
-
-Installed development tools include:
-
-* Flask application dependencies
-* Gunicorn production server
-* Pytest testing framework
-* Ruff code quality tooling
-
----
-
-## Run Automated Tests
-
-Execute the test suite:
+Start the API:
 
 ```bash
-make test
+python src/app.py
 ```
 
-Expected result:
+The API will start on:
 
-```text
-2 passed
 ```
-
-The tests validate:
-
-* Health endpoint behavior
-* Risk prediction API behavior
-
----
-
-## Run Code Quality Checks
-
-Run linting:
-
-```bash
-make lint
-```
-
-Ruff validates:
-
-* Import formatting
-* Code quality rules
-* Consistent Python standards
-
-Expected result:
-
-```text
-All checks passed
+http://localhost:5000
 ```
 
 ---
 
-## Run Application Locally
-
-Start the application:
-
-```bash
-make run
-```
-
-The API will be available at:
-
-```
-http://localhost:8080
-```
-
----
+# API Endpoints
 
 ## Health Check
 
-Verify the application is running:
+Request:
 
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:5000/health
 ```
 
-Expected response:
+Response:
 
 ```json
 {
@@ -301,45 +196,133 @@ Expected response:
 
 ---
 
-## Test Prediction API
+## Risk Prediction
 
-Send a prediction request:
+Request:
 
 ```bash
-curl -X POST http://localhost:8080/predict \
+curl -X POST http://localhost:5000/predict \
 -H "Content-Type: application/json" \
--d '{"text":"armed conflict reported"}'
+-d '
+{
+  "features": {
+    "income": 80000,
+    "credit_score": 720
+  }
+}'
 ```
 
-Expected response:
+Response:
 
 ```json
 {
-  "risk_level": "HIGH",
-  "confidence": 0.9
+  "risk": "low"
 }
 ```
 
 ---
 
-## Build Docker Image
+# Testing
 
-Build the application container:
+Run unit tests:
 
 ```bash
-make docker-build
+pytest
 ```
 
-This creates the container artifact:
+Run linting:
+
+```bash
+flake8 .
+```
+
+---
+
+# Docker
+
+## Build Image
+
+```bash
+docker build -t risk-api .
+```
+
+## Run Container
+
+```bash
+docker run -p 5000:5000 risk-api
+```
+
+Test:
+
+```bash
+curl http://localhost:5000/health
+```
+
+---
+
+# CI Pipeline
+
+Every pull request triggers automated validation:
 
 ```
-risk-api:latest
+Pull Request
+      |
+      v
+GitHub Actions
+      |
+      +--> Unit Tests
+      |
+      +--> Lint Validation
+      |
+      +--> Dependency Security Scan
+      |
+      +--> Docker Build Validation
 ```
 
-The same container artifact will later be promoted through different environments:
+A change must pass CI before being merged.
+
+---
+
+# Release Pipeline
+
+Changes merged into `main` trigger:
+
+```
+Merge
+ |
+ v
+Build Docker Image
+ |
+ v
+Push Image to Amazon ECR
+ |
+ v
+Update GitOps Repository
+ |
+ v
+ArgoCD Deployment
+ |
+ v
+Amazon EKS
+```
+
+---
+
+# Deployment Strategy
+
+The application uses GitOps principles:
+
+* Kubernetes manifests are stored separately from application code
+* Container image versions are promoted through environments
+* ArgoCD continuously reconciles desired state
+
+Environment promotion flow:
 
 ```
 Development
+      |
+      v
+QA
       |
       v
 Staging
@@ -348,49 +331,82 @@ Staging
 Production
 ```
 
-using the automated release pipeline.
+---
 
+# Configuration
+
+Application configuration is provided through environment variables.
+
+Example:
+
+```bash
+FLASK_ENV=production
+PORT=5000
 ```
 
-This section fits after **Architecture Overview** and before **Containerization / CI/CD Pipeline**.
+Secrets are not stored in Git.
+
+Production secrets should be managed using:
+
+* AWS Secrets Manager
+* Kubernetes Secrets
+* External Secrets Operator
+
+---
+
+# Security Considerations
+
+Implemented:
+
+* Non-root Docker container execution
+* Dependency vulnerability scanning
+* Least privilege IAM access
+* Private Kubernetes workloads
+* Image scanning before deployment
+
+---
+
+# Repository Structure
+
+```
+.
+├── .github
+│   └── workflows
+│       ├── ci.yaml
+│       └── release.yaml
+├── .gitignore
+├── DESIGN.md
+├── Dockerfile
+├── Makefile
+├── README.md
+├── docs
+├── extrac-ai-release-pipeline-architecture.png
+├── extrac-release-pipeline-design.pdf
+├── pyproject.toml
+├── src
+│   ├── __init__.py
+│   ├── app.py
+│   └── model.py
+└── tests
+
+    ├── e2e
+    │   └── test_user_flow.py
+    ├── functional
+    │   └── test_api_functional.py
+    ├── integration
+    │   └── test_prediction_api.py
+    ├── performance
+    │   └── locustfile.py
+    ├── regression
+    │   └── test_regression.py
+    ├── security
+    │   └── test_security.py
+    ├── smoke
+    │   └── test_health.py
+    └── unit
+        └── test_model.py
+
 ```
 
 ---
 
-## 5. Containerization
-    - Dockerfile
-    - Building image
-    - Running container
-
-## 6. CI/CD Pipeline
-    - Pull request flow
-    - Testing
-    - Linting
-    - Security scans
-    - Image build
-
-## 7. Artifact Management
-    - ECR
-    - Image tagging
-    - Promotion strategy
-
-## 8. Kubernetes Deployment
-    - Helm charts
-    - EKS
-    - Configuration
-
-## 9. GitOps Deployment
-    - ArgoCD
-    - Environment promotion
-
-## 10. Security Controls
-    - Dependency scanning
-    - Container scanning
-    - Secrets management
-
-## 11. Operational Considerations
-    - Monitoring
-    - Logging
-    - Rollbacks
-    - Disaster recovery# branch protection test
-# branch protection testing
