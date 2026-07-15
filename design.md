@@ -1,1011 +1,430 @@
-Step 1 — Introduction and Problem Statement
-
-## Step 1 — Introduction and Problem Statement
-
-
-> The current release process creates friction for engineering teams due to manual steps, inconsistent deployments, and limited automation. The goal of the new release pipeline is to provide a secure, reliable, and developer-friendly workflow that enables engineers to deliver changes faster while maintaining strong operational controls.
+---
+title: "Platform Take Home Challenge"
+subtitle: "Designing a Secure, Developer-Friendly Release Pipeline"
 
 ---
 
-# Current Pipeline Pain Points
+# Executive Summary
 
-Here you describe the problems with the existing process.
+This proposal describes a secure, scalable, and developer-friendly release pipeline designed to reduce deployment friction while maintaining strong operational controls. The solution follows GitOps principles and leverages Infrastructure as Code (IaC), automated testing, immutable artifacts, and progressive environment promotion to deliver reliable software changes from development to production.
 
-A typical problematic pipeline might have:
+The platform is built around the following technologies:
 
-## 1. Manual deployment steps
+* Terraform for infrastructure provisioning
+* Amazon Web Services (AWS)
+* Amazon EKS as the hosting platform
+* Docker for containerization
+* GitHub Actions for Continuous Integration
+* Amazon ECR for immutable artifact storage
+* ArgoCD for GitOps-based Continuous Delivery
+* Helm for Kubernetes application packaging
 
-Example:
-
-```
-Developer completes code
-
-↓
-
-Opens deployment request
-
-↓
-
-Operations team manually deploys
-
-↓
-
-Wait for confirmation
-```
-
-Problems:
-
-* Slow delivery
-* Requires coordination between teams
-* Human errors possible
-* Difficult to repeat consistently
+The design emphasizes automation, security, repeatability, and a positive developer experience while maintaining production-grade deployment controls.
 
 ---
 
-## 2. Long feedback cycles
+# Architecture Overview
 
-Example:
+The platform is separated into three independent repositories, each with a single responsibility.
 
-Developer commits code.
+### Platform Infrastructure Repository
 
-They wait until a later stage to discover:
+Responsible for provisioning cloud infrastructure using Terraform.
 
-* Unit test failures
-* Configuration problems
-* Deployment issues
+Infrastructure components include:
 
-Problems:
-
-* Engineers lose productivity
-* Bugs are discovered too late
-* More expensive to fix
-
----
-
-## 3. Environment inconsistencies
-
-Example:
-
-```
-Works in Development
-
-Doesn't work in Production
-```
-
-Caused by:
-
-* Different configurations
-* Manual changes
-* Different deployment processes
-
----
-
-## 4. Lack of visibility
-
-Problems:
-
-* Developers don't know deployment status
-* Difficult to identify failures
-* Rollbacks are unclear
-
----
-
-# Need for Automation
-
-The new pipeline should automate repetitive tasks.
-
-Instead of:
-
-```
-Developer
-    |
-Manual build
-    |
-Manual testing
-    |
-Manual deployment
-```
-
-Move toward:
-
-```
-Developer
-
-git push
-
-↓
-
-Automated validation
-
-↓
-
-Automated build
-
-↓
-
-Automated deployment
-
-↓
-
-Environment ready
-```
-
-Automation provides:
-
-* Faster delivery
-* Repeatable deployments
-* Fewer human errors
-* Consistent environments
-
----
-
-# Need for Security Guard Rails
-
-The goal is **not to slow developers down with security checks**.
-
-The goal is to make the secure path the easiest path.
-
-Examples of guard rails:
-
-## Before code merge
-
-Automatically check:
-
-* Code quality
-* Tests
-* Secrets accidentally committed
-* Dependency issues
-
-Example:
-
-```
-Pull Request
-
-↓
-
-Security Checks
-
-↓
-
-Approved
-
-↓
-
-Merge
-```
-
----
-
-## Before production deployment
-
-Protect production with:
-
-* Environment approvals
-* Deployment policies
-* Health checks
-* Automated rollback
-
-Example:
-
-```
-Staging Successful
-
-↓
-
-Approval
-
-↓
-
-Production Deployment
-```
-
----
-
-# Need for Faster Developer Delivery
-
-The pipeline should reduce the time from:
-
-```
-Code written
-```
-
-to:
-
-```
-Code available in an environment
-```
-
-The goal is:
-
-* Developers can deploy without waiting for another team
-* Environments are created consistently
-* Failures are detected quickly
-* Releases are predictable
-
-Example:
-
-Before:
-
-```
-Code change
-
-↓
-
-Ticket
-
-↓
-
-Manual deployment
-
-↓
-
-Days
-```
-
-After:
-
-```
-Code change
-
-↓
-
-Automated pipeline
-
-↓
-
-Environment available
-
-↓
-
-Minutes
-```
-
----
-
-# How I would write this in the PDF
-
-Something like:
-
-> ## Introduction and Problem Statement
->
-> The existing release process creates friction by relying on manual steps, inconsistent deployment workflows, and delayed feedback loops. These challenges increase delivery time and introduce operational risk.
->
-> The objective of this design is to create a secure, developer-friendly release pipeline that enables engineers to move code from development to production quickly and safely. The pipeline uses automation and guard rails to enforce security and reliability standards while minimizing unnecessary manual intervention.
->
-> Key goals:
->
-> * Automate build, test, and deployment workflows.
-> * Provide fast feedback to developers.
-> * Implement security controls throughout the software delivery lifecycle.
-> * Enable consistent promotion across development, staging, and production environments.
-> * Reduce deployment risk through automated validation, monitoring, and rollback capabilities.
-
----
-
-This section sets up the rest of the document. The next section would naturally be:
-
-**Step 2 — Pipeline Architecture and Stages**
-
-where you introduce:
-
-* Source control
-* CI pipeline
-* Build
-* Artifact storage
-* Deployment
-* Environment promotion
-* Security gates.
-
-----
-
-## Step 2 — Architecture Assumptions
-
-### Purpose
-
-This section defines the assumed technology environment for the release pipeline. The choices are based on the requirements of the role and the goal of creating a secure, reliable, and developer-friendly deployment process.
-
-The architecture assumes a containerized application running on AWS with Kubernetes as the hosting platform. Infrastructure, application deployments, and security controls are managed through automation to provide consistency across environments.
-
----
-
-# Architecture Assumptions
-
-## Cloud Provider: AWS
-
-The solution assumes AWS as the cloud provider.
-
-AWS provides the foundation for:
-
-* Compute resources
+* Amazon VPC
+* Amazon EKS
+* Amazon ECR
+* IAM Roles and Policies
 * Networking
-* Identity and access management
-* Container hosting
-* Artifact storage
-* Secret management
-* Monitoring integrations
 
-Using managed AWS services reduces operational overhead while providing built-in reliability, security, and scalability.
+Separating infrastructure from application code enables independent lifecycle management, version control, and reproducible environments.
 
 ---
 
-# Hosting Platform: Amazon EKS (Elastic Kubernetes Service)
+### Application Repository
 
-The application hosting platform is assumed to be Amazon EKS.
-
-Applications are deployed as containerized workloads running inside Kubernetes.
-
-EKS provides:
-
-* Managed Kubernetes control plane
-* High availability across Availability Zones
-* Container orchestration
-* Application scaling
-* Rolling deployments
-* Health management
-
-Kubernetes capabilities used by the platform include:
-
-* Deployments for application lifecycle management
-* Services for internal communication
-* Ingress for external traffic routing
-* Horizontal Pod Autoscaler for scaling
-* Readiness and liveness probes for application health
-
----
-
-# Source Control: GitHub
-
-GitHub is used as the source control platform.
-
-The repository contains:
+The application repository contains:
 
 * Application source code
-* Pipeline definitions
-* Kubernetes manifests
-* Helm charts
-* Infrastructure code
+* Unit tests
+* Integration tests
+* Functional tests
+* Regression tests
+* End-to-end tests
+* Performance tests
+* Security tests
+* Dockerfile
+* CI pipeline
 
-GitHub provides:
-
-* Pull request workflows
-* Code review
-* Branch protection
-* Audit history
-* Collaboration between engineering teams
-
-Git becomes the source of truth for both application changes and infrastructure changes.
+Developers interact only with this repository during feature development.
 
 ---
 
-# CI System: GitHub Actions
+### GitOps Repository
 
-GitHub Actions is used as the continuous integration platform.
+The GitOps repository contains the deployment configuration for each environment.
 
-The CI pipeline automates:
+It includes:
 
-* Code validation
+* Helm chart
+* Environment-specific values
+* ArgoCD Applications
+* Promotion workflows
+* Validation workflows
+
+The application repository never deploys directly to Kubernetes. Instead, deployments occur only after the GitOps repository is updated with a new immutable image tag.
+
+---
+
+# End-to-End Release Pipeline
+
+## Step 1 – Development
+
+A developer opens a Pull Request.
+
+GitHub Actions automatically executes the Continuous Integration pipeline.
+
+The pipeline performs:
+
+* Source checkout
+* Dependency installation
+* Static analysis
 * Unit testing
-* Application builds
-* Container image creation
+* Docker image build
+* Security validation
 * Artifact publishing
 
-GitHub Actions provides:
-
-### Security
-
-* Integration with repository permissions
-* Pull request validation
-* Protected branch workflows
-
-### Developer Experience
-
-* Developers receive immediate feedback
-* No separate deployment tooling is required
-* Reusable workflows can standardize engineering practices
-
-### Speed and Repeatability
-
-* Automated execution
-* Parallel pipeline steps
-* Consistent build process across environments
+Only successful builds are allowed to continue.
 
 ---
 
-# Artifact Storage: Amazon Elastic Container Registry (ECR)
+## Step 2 – Artifact Creation
 
-Amazon ECR is used to store application container images.
+A Docker image is built using the application's Dockerfile.
 
-The pipeline builds a Docker image and publishes it to ECR after successful validation.
+The image is tagged using the Git commit SHA, ensuring every deployment references an immutable artifact.
 
-ECR provides:
+The image is then pushed to Amazon ECR.
 
-* Private container registry
-* AWS IAM integration
-* Secure image storage
-* Versioned artifacts
-* Integration with Amazon EKS
+Using immutable image tags guarantees that every environment deploys exactly the same software version.
 
-The same immutable container image is promoted through environments:
+---
 
-```
+## Step 3 – GitOps Promotion
+
+After the image is published, a repository dispatch event triggers the GitOps repository.
+
+The appropriate environment values file is updated with the new image tag.
+
+Only deployment configuration changes are committed to the GitOps repository.
+
+This provides:
+
+* Complete deployment history
+* Easy rollback
+* Full auditability
+* Separation between application code and deployment configuration
+
+---
+
+## Step 4 – Continuous Delivery
+
+ArgoCD continuously monitors the GitOps repository.
+
+Whenever a new image tag is committed, ArgoCD automatically synchronizes the Kubernetes cluster.
+
+Deployments occur declaratively through Helm.
+
+Because Kubernetes is reconciled continuously, cluster drift is automatically corrected.
+
+---
+
+# Environment Promotion Strategy
+
+The release pipeline promotes software through four environments.
+
 Development
-      ↓
-Staging
-      ↓
-Production
-```
 
-This prevents rebuilding artifacts between environments and ensures consistency.
+* Automatic deployment
+* Smoke testing
+* Fast feedback
+
+↓
+
+Quality Assurance
+
+* Functional testing
+* Integration testing
+
+↓
+
+Staging
+
+* End-to-end testing
+* Regression testing
+* Performance validation
+
+↓
+
+Production
+
+* Manual approval
+* Controlled release
+
+Each environment must successfully complete its validation workflow before promotion to the next stage.
+
+This minimizes deployment risk while maintaining rapid delivery.
 
 ---
 
-# Deployment Tooling: ArgoCD
+# Hosting Platform
 
-ArgoCD is used as the deployment tool following a GitOps model.
+The solution assumes Amazon Elastic Kubernetes Service (EKS) as the production hosting platform.
 
-The deployment workflow is:
+Applications are deployed using Helm charts managed by ArgoCD.
+
+The Helm chart includes:
+
+* Deployment
+* Service
+* Horizontal Pod Autoscaler
+* Ingress
+
+This allows applications to scale automatically while maintaining consistent deployments across every environment.
+
+---
+
+# Security
+
+Security is integrated throughout the release pipeline rather than added only at deployment time. The platform applies security controls across the entire software delivery lifecycle, including source code, CI validation, artifact management, infrastructure, and Kubernetes workloads.
+
+The security model follows a defense-in-depth approach:
 
 ```
+
 Developer
     |
-GitHub
+    v
+Pull Request
     |
-GitHub Actions builds image
+    v
+GitHub Actions Security Gates
     |
-Update deployment configuration
+    ├── Dependency Vulnerability Scanning
+    ├── Secret Detection
+    ├── Static Application Security Testing (SAST)
+    └── Container Vulnerability Scanning
     |
-GitOps Repository
-    |
-ArgoCD
-    |
-Amazon EKS
-```
-
-ArgoCD continuously monitors the desired application state stored in Git and reconciles the Kubernetes cluster to match that state.
-
-Benefits:
-
-### Security
-
-* No direct CI access to Kubernetes required
-* Deployment changes are reviewed through Git
-* Complete audit history
-
-### Reliability
-
-* Automatic drift detection
-* Self-healing deployments
-* Easy rollback through Git history
-
-### Developer Experience
-
-* Developers interact with Git instead of manually running deployment commands
-* Deployment status is visible through ArgoCD
-
----
-
-# Infrastructure as Code: Terraform
-
-Terraform is used to provision and manage AWS infrastructure.
-
-Terraform manages:
-
-* VPC networking
-* Amazon EKS clusters
-* IAM roles and policies
-* Amazon ECR repositories
-* Supporting AWS resources
-
-Benefits:
-
-### Reliability
-
-* Infrastructure is version controlled
-* Environments can be recreated consistently
-
-### Security
-
-* Changes are reviewed before deployment
-* Infrastructure changes are auditable
-
-### Developer Experience
-
-* Standardized infrastructure modules
-* Reduced manual cloud configuration
-
----
-
-# Secrets Management: AWS Secrets Manager + External Secrets Operator
-
-Application secrets are stored securely in AWS Secrets Manager.
-
-Examples:
-
-* Database credentials
-* API keys
-* Service credentials
-
-The External Secrets Operator integrates Kubernetes with AWS Secrets Manager.
-
-Flow:
-
-```
-AWS Secrets Manager
-
-        ↓
-
-External Secrets Operator
-
-        ↓
-
-Kubernetes Secret
-
-        ↓
-
-Application Pod
-```
-
-Benefits:
-
-### Security
-
-* Secrets are not stored in Git
-* Secrets are not embedded in container images
-* Access controlled through IAM policies
-
-### Reliability
-
-* Centralized secret management
-* Supports secret rotation
-
-### Developer Experience
-
-* Applications receive secrets automatically
-* Developers do not manually copy credentials
-
----
-
-# Summary Architecture
-
-| Area               | Technology                                      | Purpose                               |
-| ------------------ | ----------------------------------------------- | ------------------------------------- |
-| Cloud Provider     | AWS                                             | Cloud infrastructure foundation       |
-| Container Platform | Amazon EKS                                      | Application hosting and orchestration |
-| Source Control     | GitHub                                          | Code and configuration management     |
-| CI                 | GitHub Actions                                  | Automated build and validation        |
-| Artifact Storage   | Amazon ECR                                      | Container image storage               |
-| Deployment         | ArgoCD                                          | GitOps-based Kubernetes deployment    |
-| Infrastructure     | Terraform                                       | Automated AWS provisioning            |
-| Secrets            | AWS Secrets Manager + External Secrets Operator | Secure configuration delivery         |
-
----
------
-
------->
-Yes, **Step 2 — Architecture Assumptions** should include all of those. The README **Local Development Setup** section I gave you is only for the demo application workflow; it does **not replace Step 2**.
-
-Your repo should have:
-
-```text
-platform_architecture_design/
-
-├── README.md
-│
-├── docs/
-│   ├── 01-introduction.md
-│   └── 02-architecture-assumptions.md   <-- Step 2
-│
-├── app/
-├── terraform/
-├── helm/
-├── kubernetes/
-├── argocd/
-└── .github/
-```
-
-Your `docs/02-architecture-assumptions.md` should include this:
-
-```markdown
-# Step 2 — Architecture Assumptions
-
-## Purpose
-
-This section defines the assumed technology environment for the release pipeline.
-
-The architecture is designed to provide a secure, scalable, and developer-friendly platform that supports reliable software delivery from source code to production.
-
-The solution assumes a containerized application deployed on AWS using Kubernetes. Infrastructure provisioning, application deployment, security controls, and configuration management are automated to provide consistency across environments.
-
----
-
-# Cloud Provider: AWS
-
-The platform uses Amazon Web Services (AWS) as the cloud provider.
-
-AWS provides:
-
-- Compute infrastructure
-- Networking
-- Identity and Access Management (IAM)
-- Container infrastructure
-- Artifact storage
-- Secret management
-- Monitoring integrations
-
-AWS managed services are used where possible to improve reliability, security, and operational efficiency.
-
----
-
-# Hosting Platform: Amazon EKS Kubernetes
-
-The application hosting platform is Amazon Elastic Kubernetes Service (EKS).
-
-Applications run as containerized workloads managed by Kubernetes.
-
-Amazon EKS provides:
-
-- Managed Kubernetes control plane
-- High availability across Availability Zones
-- Container orchestration
-- Application scaling
-- Rolling deployments
-- Health monitoring
-
-Kubernetes capabilities used:
-
-## Deployments
-
-Manage application lifecycle:
-
-- Replica management
-- Rolling updates
-- Rollbacks
-
-## Services
-
-Provide internal communication:
-
-- Service discovery
-- Stable networking endpoints
-- Load balancing between pods
-
-## Ingress
-
-Manage external traffic:
-
-- HTTP/HTTPS routing
-- TLS termination
-- External access
-
-## Horizontal Pod Autoscaler
-
-Provides automatic scaling based on:
-
-- CPU utilization
-- Memory utilization
-- Application metrics
-
-## Readiness and Liveness Probes
-
-Provide application health management:
-
-Readiness:
-- Determines when pods can receive traffic
-
-Liveness:
-- Restarts unhealthy containers
-
----
-
-# Source Control: GitHub
-
-GitHub is used as the source control platform.
-
-The repository contains:
-
-- Application source code
-- CI/CD workflows
-- Kubernetes manifests
-- Helm charts
-- Terraform infrastructure code
-- ArgoCD deployment configuration
-
-GitHub provides:
-
-- Pull requests
-- Code review
-- Branch protection
-- Audit history
-- Collaboration workflows
-
-Git is the source of truth for application and infrastructure changes.
-
----
-
-# CI System: GitHub Actions
-
-GitHub Actions is used for continuous integration.
-
-The CI pipeline performs:
-
-- Source validation
-- Unit testing
-- Code quality checks
-- Security scanning
-- Docker image builds
-- Artifact publishing
-
-Benefits:
-
-## Security
-
-- Pull request validation
-- Protected branches
-- Controlled workflow permissions
-
-## Developer Experience
-
-- Automated feedback
-- Standardized workflows
-- No manual build steps
-
-## Speed
-
-- Parallel execution
-- Reusable workflows
-- Automated pipelines
-
----
-
-# Artifact Storage: Amazon ECR
-
-Amazon Elastic Container Registry (ECR) stores container images.
-
-The pipeline:
-
-1. Builds Docker image
-2. Runs validation checks
-3. Pushes image to ECR
-
-ECR provides:
-
-- Private container registry
-- IAM integration
-- Image versioning
-- Vulnerability scanning
-- Secure artifact storage
-
-The same immutable image is promoted across environments:
-
-```
-
-Development
-|
-v
-Staging
-|
-v
-Production
-
-```
-
-This follows the principle:
-
-**Build once, deploy many times.**
-
----
-
-# Deployment: ArgoCD
-
-ArgoCD provides GitOps-based continuous delivery.
-
-Deployment flow:
-
-```
-
-GitHub
-|
-v
-GitHub Actions
-|
-v
+    v
 Amazon ECR
-|
-v
-GitOps Repository
-|
-v
-ArgoCD
-|
-v
-Amazon EKS
-
-```
-
-ArgoCD continuously compares:
-
-- Desired state stored in Git
-- Actual Kubernetes cluster state
-
-and automatically reconciles differences.
-
-Benefits:
-
-## Security
-
-- No direct CI access to Kubernetes
-- Git-based approvals
-- Complete audit history
-
-## Reliability
-
-- Drift detection
-- Self-healing
-- Rollback through Git history
-
-## Developer Experience
-
-- Developers deploy through Git
-- No manual kubectl changes
-
----
-
-# Infrastructure as Code: Terraform
-
-Terraform manages AWS infrastructure.
-
-Terraform provisions:
-
-- VPC
-- Networking
-- Amazon EKS cluster
-- IAM roles
-- Security groups
-- Amazon ECR repositories
-
-Benefits:
-
-## Reliability
-
-- Repeatable environments
-- Version-controlled infrastructure
-- Reduced configuration drift
-
-## Security
-
-- Infrastructure changes reviewed through pull requests
-- Auditable changes
-
-## Developer Experience
-
-- Reusable modules
-- Standardized provisioning
-
----
-
-# Secrets Management:
-# AWS Secrets Manager + External Secrets Operator
-
-Secrets are stored securely in AWS Secrets Manager.
-
-Examples:
-
-- Database credentials
-- API keys
-- Service tokens
-
-External Secrets Operator synchronizes secrets into Kubernetes.
-
-Flow:
-
-```
-
-AWS Secrets Manager
-
-```
     |
     v
-```
-
-External Secrets Operator
-
-```
-    |
-    v
-```
-
-Kubernetes Secret
-
-```
-    |
-    v
-```
-
-Application Pod
+Amazon EKS Deployment
 
 ```
 
-Benefits:
 
-## Security
+### Identity and Access Management
 
-- No secrets stored in Git
-- IAM-controlled access
-- Secret rotation support
+GitHub Actions authenticates to AWS using OpenID Connect (OIDC) federation. This eliminates the need for long-lived AWS access keys and allows workflows to obtain temporary AWS credentials through IAM role assumption.
 
-## Reliability
+IAM permissions follow the principle of least privilege. The CI/CD IAM role is restricted to the permissions required to publish container images to Amazon ECR and does not have unnecessary infrastructure or cluster administration permissions.
+
+
+### CI/CD Security Gates
+
+Security validation is performed automatically during the CI pipeline before artifacts are promoted.
+
+The pipeline includes:
+
+- Dependency vulnerability scanning using pip-audit
+- Secret detection using Gitleaks
+- Static Application Security Testing (SAST) using Semgrep
+- Container vulnerability scanning using Trivy
+
+These checks provide early detection of security issues before software reaches deployment environments.
+
+
+### Container Security
+
+Container images are secured through immutable artifact management and vulnerability scanning.
+
+Amazon ECR is configured with:
+
+- Immutable image tags to prevent artifact replacement
+- Automated image scanning on push
+- Versioned images using Git commit SHA identifiers
+
+This ensures every deployment references a unique and traceable container artifact.
+
+
+### Kubernetes Workload Security
+
+Kubernetes workloads apply container-level security hardening.
+
+Security controls include:
+
+- Running containers as non-root users
+- Disabling privilege escalation
+- Dropping unnecessary Linux capabilities
+- Using read-only container filesystems
+- Defining CPU and memory resource limits
+
+These controls reduce the impact of potential container compromise and improve workload isolation.
+
+
+### Infrastructure Security
+
+Infrastructure is provisioned and managed using Terraform.
+
+The AWS environment includes:
+
+- Dedicated VPC networking
+- Public and private subnet separation
+- Kubernetes worker nodes deployed in private subnets
+- Multi-Availability Zone deployment
+- IAM-based access management
+
+Infrastructure changes are version controlled and reproducible, reducing configuration drift and improving operational consistency.
+
+
+### Secrets Management
+
+Secrets are not stored in application repositories or GitOps configuration.
+
+For production environments, AWS Secrets Manager integrated with Kubernetes External Secrets Operator would be used to securely deliver secrets to workloads.
+
+This approach provides:
 
 - Centralized secret management
-- Automated synchronization
+- Improved access control
+- Secret rotation capabilities
+- Prevention of sensitive data exposure in Git repositories
 
-## Developer Experience
 
-- Applications receive secrets automatically
-- No manual credential handling
+### Kubernetes Runtime Security (Production Enhancement)
+
+Additional Kubernetes security controls would be introduced for production environments, including:
+
+- Kubernetes RBAC for least-privilege cluster access
+- Network Policies to restrict pod-to-pod communication
+- Pod Security Standards to prevent insecure workloads
+- IAM Roles for Service Accounts (IRSA) for secure AWS service access from Kubernetes workloads
+
+
+### Production Deployment Security Gate
+
+Production deployments require successful validation in lower environments before promotion.
+
+The release flow follows:
+
+DEV → QA → STAGING → Production Approval → PRODUCTION
+
+The production environment would use deployment protection rules including:
+
+- Required reviewer approval
+- Deployment audit history
+- Restricted production access
+- Separation of duties
+
+This prevents unvalidated changes from reaching production while maintaining a controlled and auditable release process.
 
 ---
 
-# Architecture Summary
+# Observability
 
-| Component | Technology |
-|---|---|
-| Cloud Provider | AWS |
-| Hosting Platform | Amazon EKS Kubernetes |
-| Source Control | GitHub |
-| CI | GitHub Actions |
-| Artifact Storage | Amazon ECR |
-| Deployment | ArgoCD |
-| Infrastructure as Code | Terraform |
-| Secrets Management | AWS Secrets Manager + External Secrets Operator |
-```
 
-This covers **exactly what the challenge asks for in Step 2**.
+The platform includes an observability stack to monitor application health, infrastructure performance, and deployment reliability.
 
-The next step after this is **Step 3 — End-to-End Release Pipeline Stages**, where we connect everything:
+The solution uses:
 
-```
-Developer
- ↓
-Pull Request
- ↓
-GitHub Actions
- ↓
-Security Gates
- ↓
-Docker Build
- ↓
-ECR
- ↓
-Environment Promotion
- ↓
-ArgoCD
- ↓
-EKS
- ↓
-Monitoring/Rollback
-```
+- Prometheus for metrics collection
+- Grafana for dashboards and alerting
+- Fluent Bit to collect container logs
+- CloudWatch Logs or Loki for centralized log storage
+- ArgoCD and Kubernetes health checks to monitor deployments
 
-That is where we start satisfying the remaining challenge requirements:
+Key metrics include:
 
-* different pipeline stages
-* technologies per stage
-* security gates
-* environment promotion
-* artifact deployment.
+- Request rate and latency
+- Error rate
+- Pod health and restarts
+- CPU and memory utilization
+- Kubernetes deployment status
 
------->
-This section establishes the foundation. The next section should be:
+Alerts are generated for conditions such as:
 
-**Step 3 — End-to-End Release Pipeline Stages**
+- Application failures
+- High error rates
+- Increased latency
+- Pod crash loops
+- Resource exhaustion
+- Node failures
 
-where we walk through:
+For distributed applications, OpenTelemetry can be added to provide end-to-end request tracing across services.
 
-1. Developer workflow
-2. Pull request validation
-3. CI build process
-4. Security gates
-5. Artifact creation
-6. Environment promotion
-7. Deployment to EKS
-8. Production release strategy.
+This observability stack provides engineers with rapid feedback, simplifies troubleshooting, and helps detect deployment issues before they impact users.
 
+---
+
+# Reliability
+
+Platform reliability is achieved through several architectural decisions:
+
+- Immutable Docker images eliminate configuration drift.
+- GitOps continuously reconciles the desired cluster state.
+- Multi-stage environment promotion reduces production risk.
+- Terraform provides reproducible infrastructure.
+- Multi-AZ EKS improves availability.
+
+## Rollback Strategy
+
+Rollback is performed by reverting the image tag in the GitOps repository. ArgoCD automatically detects the change and restores the previous known-good version without requiring manual Kubernetes changes.
+
+---
+
+# Developer Experience
+
+The pipeline is designed to minimize manual work.
+
+Developers only need to:
+
+1. Commit code.
+2. Open a Pull Request.
+3. Merge after approval.
+
+Everything else is automated.
+
+This includes:
+
+* Testing
+* Image creation
+* Artifact publishing
+* Environment promotion
+* Kubernetes deployment
+
+Automation allows engineers to focus on application development instead of deployment mechanics.
+
+---
+
+# Design Trade-offs
+
+Several architectural decisions were made intentionally.
+
+GitOps was selected over imperative deployment because it provides a complete deployment history, easier rollbacks, and automatic reconciliation.
+
+Amazon EKS was selected because it provides a mature Kubernetes platform with strong scalability and ecosystem support.
+
+Terraform was selected to ensure infrastructure is reproducible, version-controlled, and consistent across environments.
+
+Helm simplifies Kubernetes resource management while enabling reusable deployment templates across multiple environments.
+
+Separating infrastructure, application code, and deployment configuration into independent repositories increases maintainability and allows teams to work independently.
+
+---
+
+# Conclusion
+
+This design provides a secure, GitOps-based release pipeline that emphasizes automation, repeatability, and developer productivity. By combining Terraform, GitHub Actions, Amazon ECR, Helm, ArgoCD, and Amazon EKS, the platform delivers immutable deployments, automated validation, controlled environment promotion, and reliable continuous delivery with minimal operational overhead.
