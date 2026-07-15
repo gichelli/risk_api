@@ -380,8 +380,8 @@ Implemented:
 ├── Makefile
 ├── README.md
 ├── docs
-├── extrac-ai-release-pipeline-architecture.png
-├── extrac-release-pipeline-design.pdf
+├── ai-release-pipeline-architecture.png
+├── -release-pipeline-design.pdf
 ├── pyproject.toml
 ├── src
 │   ├── __init__.py
